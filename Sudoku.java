@@ -143,13 +143,13 @@ public class Sudoku{
 	}
 
 	options[9] = new JButton();
-	options[9].setIcon(new ImageIcon(new ImageIcon("eraser.png").getImage().getScaledInstance(10, 15, Image.SCALE_DEFAULT)));
+	options[9].setIcon(new ImageIcon(new ImageIcon("src/Sudoku/Images/eraser.png").getImage().getScaledInstance(10, 15, Image.SCALE_DEFAULT)));
 	lowerPanel.add(options[9]);
 	options[9].addActionListener(erase);
 	options[9].setEnabled(false);
 
 	options[10] = new JButton();
-	options[10].setIcon(new ImageIcon(new ImageIcon("undo.png").getImage().getScaledInstance(10, 15, Image.SCALE_DEFAULT)));
+	options[10].setIcon(new ImageIcon(new ImageIcon("src/Sudoku//Images/undo.png").getImage().getScaledInstance(10, 15, Image.SCALE_DEFAULT)));
 	lowerPanel.add(options[10]);
 	options[10].addActionListener(revert);
 	options[10].setEnabled(false);
@@ -164,7 +164,7 @@ public class Sudoku{
 	
 
 	options[11] = new JButton();
-	options[11].setIcon(new ImageIcon(new ImageIcon("rubik.png").getImage().getScaledInstance(10, 15, Image.SCALE_DEFAULT)));
+	options[11].setIcon(new ImageIcon(new ImageIcon("src/Sudoku/Images/rubik.png").getImage().getScaledInstance(10, 15, Image.SCALE_DEFAULT)));
 	lowerPanel.add(options[11]);
 	options[11].addActionListener((ActionEvent e) -> {
 	    for(int i=0; i<9; i++){
