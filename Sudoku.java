@@ -23,8 +23,6 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -47,42 +45,20 @@ public class Sudoku{
      */
     private static JTextField selected;
     private static JButton[] options;
+    private static JCheckBox verifyButton;
     private static SudokuGrid board;
     private static Deque<int[][]> backup;
     private static boolean verify;
+    private static JTextField[][] fields;
 
     public static void main(String[] args) {
 
-	JTextField[][] fields = new JTextField[9][9];
 	
-	Scanner in = null;
-	try {
-	    in = new Scanner(new File("sudoku.txt"));
-	} catch (IOException ex) {
-	    Logger.getLogger(Sudoku.class.getName()).log(Level.SEVERE, null, ex);
-	}
-
-	int[][] arr = new int[9][9];
-	int i=0, j=0;
-	while(in.hasNextLine()){
-	    for(String s : in.nextLine().split("\\s")){
-		arr[i][j++] = Integer.valueOf(s);
-	    }
-	    j=0;
-	    i++;
-	}
-
-	in.close();
-
-	backup = new ArrayDeque<>();
-	verify = false;
-	runGUI(fields);
-	board = new SudokuGrid(arr, fields);
-	resetBackgroundColors();
-
+	
+	runGUI();
     }
 
-    private static void runGUI(JTextField[][] fields){
+    private static void runGUI(){
 	JFrame frame = new JFrame("Sudoku");
 	frame.setLayout(new BorderLayout());
 	frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -90,13 +66,13 @@ public class Sudoku{
 
 	buildMenu(frame);
 
-	buildNumbersPanel(frame, fields);
+	buildNumbersPanel(frame);
 
 	buildOptionsPanel(frame);
 
 	frame.pack();
     }
-
+    
     private static void buildMenu(JFrame frame){
 
 	JMenuBar menu = new JMenuBar();
@@ -107,14 +83,71 @@ public class Sudoku{
 	menu.add(menuGame);
 
 	JMenuItem menuEasy = new JMenuItem("Easy");
+	menuEasy.addActionListener(new ActionListener(){
+	    @Override
+	    public void actionPerformed(ActionEvent e) {
+		createGame(new File("sudoku_easy.txt"));
+	    }
+	    
+	});
 	JMenuItem menuInter = new JMenuItem("Itermediate");
+	menuInter.addActionListener(new ActionListener(){
+	    @Override
+	    public void actionPerformed(ActionEvent e) {
+		createGame(new File("sudoku_medium.txt"));
+	    }
+	    
+	});
 	JMenuItem menuExp = new JMenuItem("Expert");
+	menuExp.addActionListener(new ActionListener(){
+	    @Override
+	    public void actionPerformed(ActionEvent e) {
+		createGame(new File("sudoku_hard.txt"));
+	    }
+	    
+	});
 	menuGame.add(menuEasy);menuGame.add(menuInter);menuGame.add(menuExp);
 
     }
+    
+    private static void createGame(File file){
+	backup = new ArrayDeque<>();
+	verify = false;
+	verifyButton.setSelected(false);
+	Scanner in = null;
+	try {
+	    in = new Scanner(file);
+	} catch (IOException ex) {
+	    System.err.println("Input file error");
+	}
 
-    private static void buildNumbersPanel(JFrame frame, JTextField[][] fields){
+	int[][] arr = new int[9][9];
+	int k=0, l=0;
+	while(in.hasNextLine()){
+	    for(String s : in.nextLine().split("\\s")){
+		arr[k][l++] = Integer.valueOf(s);
+	    }
+	    l=0;
+	    k++;
+	}
 
+	in.close();
+	board = new SudokuGrid(arr, fields);
+	for(int i=0; i<9; i++){
+	    options[i].setEnabled(true);
+	    for(int j=0; j<9; j++){
+		fields[i][j].addFocusListener(focus);
+		fields[i][j].setFocusable(true);
+	    }
+	}
+	options[11].setEnabled(true);
+	verifyButton.setEnabled(true);
+	resetBackgroundColors();
+    }
+
+
+    private static void buildNumbersPanel(JFrame frame){
+	fields = new JTextField[9][9];
 	JPanel mainPanel = new JPanel(new GridLayout(3,3));
 	frame.add(mainPanel, CENTER);
 
@@ -124,7 +157,6 @@ public class Sudoku{
 	    for(int j=0; j<9; j++){
 		grid[i].add(fields[i][j] = new JTextField());
 		fields[i][j].setEditable(false);
-		fields[i][j].addFocusListener(focus);
 	    }
 	    grid[i].setBorder(BorderFactory.createEmptyBorder(5,2,5,2)); 
 	    mainPanel.add(grid[i]);
@@ -154,11 +186,11 @@ public class Sudoku{
 	options[10].addActionListener(revert);
 	options[10].setEnabled(false);
 
-	JCheckBox verifyButton = new JCheckBox("Verify against solution");
+	verifyButton = new JCheckBox("Verify against solution");
 	lowerPanel.add(verifyButton);
 	verifyButton.setRolloverEnabled(false);
 	verifyButton.addItemListener((ItemEvent e) -> {
-	    verify = !verify;
+	    verify = verifyButton.getSelectedObjects() != null;
 	    resetBackgroundColors();
 	});
 	
@@ -176,8 +208,8 @@ public class Sudoku{
 	    }
 	    for(int i=0; i<12; i++){	    
 		options[i].setEnabled(false);
-		verifyButton.setEnabled(false);
 	    }
+	    verifyButton.setEnabled(false);
 	});
 
 	frame.add(lowerPanel, PAGE_END);
@@ -194,7 +226,6 @@ public class Sudoku{
 		    else{
 			board.getTile(i,j).getTextField().setBackground(Color.white);
 		    }
-		    
 		}
 		else{
 		    board.getTile(i,j).getTextField().setBackground(Color.gray);
