@@ -47,14 +47,11 @@ public class Sudoku{
     private static JButton[] options;
     private static JCheckBox verifyButton;
     private static SudokuGrid board;
-    private static Deque<int[][]> backup;
+    private static Deque<SudokuTile> backup;
     private static boolean verify;
     private static JTextField[][] fields;
 
     public static void main(String[] args) {
-
-	
-	
 	runGUI();
     }
 
@@ -63,7 +60,7 @@ public class Sudoku{
 	frame.setLayout(new BorderLayout());
 	frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
 	frame.setVisible(true);
-
+	fields = new JTextField[9][9];
 	buildMenu(frame);
 
 	buildNumbersPanel(frame);
@@ -110,10 +107,41 @@ public class Sudoku{
 
     }
     
-    private static void createGame(File file){
+    private static void resetGame(){
 	backup = new ArrayDeque<>();
+    }
+    
+    private static void resetUI(){
 	verify = false;
 	verifyButton.setSelected(false);
+
+	for(int i=0; i<9; i++){
+	    for(int j=0; j<9; j++){
+		fields[i][j].addFocusListener(focus);
+		fields[i][j].setFocusable(true);
+	    }
+	    options[i].setEnabled(true);
+	}
+	options[11].setEnabled(true);
+	verifyButton.setEnabled(true);
+    }
+    
+    private static void disableUI(){
+	for(int i=0; i<9; i++){
+	    for(int j=0; j<9; j++){
+		board.getTile(i, j).getTextField().setFocusable(false);
+	    }
+	}
+	for(int i=0; i<12; i++){
+	    options[i].setEnabled(false);
+	}
+	verifyButton.setEnabled(false);
+    }
+    
+    private static void createGame(File file){
+	
+	resetGame();
+	
 	Scanner in = null;
 	try {
 	    in = new Scanner(file);
@@ -122,32 +150,23 @@ public class Sudoku{
 	}
 
 	int[][] arr = new int[9][9];
-	int k=0, l=0;
-	while(in.hasNextLine()){
-	    for(String s : in.nextLine().split("\\s")){
-		arr[k][l++] = Integer.valueOf(s);
-	    }
-	    l=0;
-	    k++;
-	}
-
-	in.close();
-	board = new SudokuGrid(arr, fields);
 	for(int i=0; i<9; i++){
-	    options[i].setEnabled(true);
-	    for(int j=0; j<9; j++){
-		fields[i][j].addFocusListener(focus);
-		fields[i][j].setFocusable(true);
+	    int j=0;
+	    for(String s : in.nextLine().split("\\s")){
+		arr[i][j++] = Integer.valueOf(s);
 	    }
 	}
-	options[11].setEnabled(true);
-	verifyButton.setEnabled(true);
+	in.close();
+	
+	board = new SudokuGrid(arr, fields);
+
+	resetUI();
 	resetBackgroundColors();
     }
 
 
     private static void buildNumbersPanel(JFrame frame){
-	fields = new JTextField[9][9];
+	
 	JPanel mainPanel = new JPanel(new GridLayout(3,3));
 	frame.add(mainPanel, CENTER);
 
@@ -158,7 +177,7 @@ public class Sudoku{
 		grid[i].add(fields[i][j] = new JTextField());
 		fields[i][j].setEditable(false);
 	    }
-	    grid[i].setBorder(BorderFactory.createEmptyBorder(5,2,5,2)); 
+	    grid[i].setBorder(BorderFactory.createEmptyBorder(5,5,5,5)); 
 	    mainPanel.add(grid[i]);
 	}
     }
@@ -188,6 +207,7 @@ public class Sudoku{
 
 	verifyButton = new JCheckBox("Verify against solution");
 	lowerPanel.add(verifyButton);
+	verifyButton.setEnabled(false);
 	verifyButton.setRolloverEnabled(false);
 	verifyButton.addItemListener((ItemEvent e) -> {
 	    verify = verifyButton.getSelectedObjects() != null;
@@ -198,18 +218,11 @@ public class Sudoku{
 	options[11] = new JButton();
 	options[11].setIcon(new ImageIcon(new ImageIcon("src/Sudoku/Images/rubik.png").getImage().getScaledInstance(10, 15, Image.SCALE_DEFAULT)));
 	lowerPanel.add(options[11]);
+	options[11].setEnabled(false);
 	options[11].addActionListener((ActionEvent e) -> {
-	    for(int i=0; i<9; i++){
-		for(int j=0; j<9; j++){
-		    board.getTile(i, j).setValue(board.getTile(i, j).getSolution());
-		    board.getTile(i, j).setTextField(String.valueOf(board.getTile(i, j).getSolution()));
-		    board.getTile(i, j).getTextField().setFocusable(false);
-		}
-	    }
-	    for(int i=0; i<12; i++){	    
-		options[i].setEnabled(false);
-	    }
-	    verifyButton.setEnabled(false);
+	    board.solve();
+	    resetBackgroundColors();
+	    disableUI();
 	});
 
 	frame.add(lowerPanel, PAGE_END);
@@ -271,13 +284,14 @@ public class Sudoku{
 		return;
 	    }
 	    if(!board.getTile(selected).canEdit()){
+		board.getTile(selected).getTextField().setBackground(Color.red);
 		return;
 	    }
 	    if(board.canChange(board.getTile(selected), Integer.valueOf(ae.getActionCommand()))){
 		if(backup.isEmpty()){
 		    options[10].setEnabled(true);
 		}
-		backup.push(board.getSnapshot());
+		backup.push(board.getTile(selected).backup());
 		board.change(board.getTile(selected), Integer.valueOf(ae.getActionCommand()));
 		options[9].setEnabled(true);
 		updateBackgroundColors();
@@ -299,7 +313,7 @@ public class Sudoku{
 		return;
 	    }
 	    if(board.getTile(selected).canEdit() && board.getTile(selected).getValue()!=0){
-		backup.push(board.getSnapshot());
+		backup.push(board.getTile(selected).backup());
 		board.change(board.getTile(selected),0);
 		options[9].setEnabled(false);
 	    }

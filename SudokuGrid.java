@@ -55,12 +55,8 @@ public class SudokuGrid {
 	return values;
     }
     
-    public void restore(int[][] s){
-	for(int i=0; i<9; i++){
-	    for (int j=0; j<9; j++){
-		change(tiles[i][j], s[i][j]);
-	    }
-	}
+    public void restore(SudokuTile t){
+	change(tiles[t.getRow()][t.getColumn()], t.getValue());
     }
     
     public SudokuTile getTile(JTextField field){
@@ -95,10 +91,12 @@ public class SudokuGrid {
 	    nums[t.getValue()-1].remove(t);
 	}
 	t.setValue(newVal);
-	t.setTextField("");
 	if(newVal!=0){
 	    t.setTextField(String.valueOf(newVal));
 	    nums[newVal-1].add(t);
+	}
+	else{
+	    t.setTextField("");
 	}
     }
         
@@ -113,9 +111,15 @@ public class SudokuGrid {
 	return str.toString();
     }
     
+    public void solve(){
+	for(int i=0; i<9; i++){
+	    for (int j=0; j<9; j++){
+		change(tiles[i][j], tiles[i][j].getSolution());
+	    }
+	}
+    }
+    
     private void getSolution(){
-	Thread thread = new Thread();
-	thread.start();
 	SudokuSolver s = new SudokuSolver(getSnapshot());
 	if(s.getValues()!=null){
 	    int[][] array = s.getValues();

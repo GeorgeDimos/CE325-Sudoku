@@ -30,6 +30,10 @@ public class SudokuTile {
 	textField.setText(value!=0 ? String.valueOf(value) : "");
     }
     
+    public SudokuTile backup(){
+	return new SudokuTile(canEdit, value, gridNumber, row, column, textField);
+    }
+    
     public void setTextField(String text){
 	textField.setText(text);
     }
