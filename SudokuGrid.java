@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import javax.swing.JTextField;
 
 /**
  *
@@ -19,13 +18,11 @@ public class SudokuGrid {
     private final SudokuTile[][] tiles;
     private final Collection<SudokuTile>[] grid;
     private final Collection<SudokuTile>[] nums;
-    private final Map<JTextField,SudokuTile> map;
     
-    public SudokuGrid(int arr[][], JTextField[][] fields){
+    public SudokuGrid(int arr[][]){
 	tiles = new SudokuTile[9][9];
 	grid = new ArrayList[9];
 	nums = new ArrayList[9];
-	map = new LinkedHashMap<>();
 	
 	for(int i=0;i<9;i++){
 	    grid[i] = new ArrayList();
@@ -34,8 +31,7 @@ public class SudokuGrid {
 	
 	for(int i=0; i<9; i++){
 	    for (int j=0; j<9; j++){
-		tiles[i][j] = new SudokuTile((arr[i][j]==0), arr[i][j], (j/3)+(i/3)*3, i, j, fields[i/3*3+j/3][(i%3)*3+j%3]);
-		map.put(fields[i/3*3+j/3][(i%3)*3+j%3], tiles[i][j]);
+		tiles[i][j] = new SudokuTile((arr[i][j]==0), arr[i][j], (j/3)+(i/3)*3, i, j);
 		grid[(j/3)+(i/3)*3].add(tiles[i][j]);
 		if(arr[i][j]!=0){
 		    nums[arr[i][j]-1].add(tiles[i][j]);
@@ -57,10 +53,6 @@ public class SudokuGrid {
     
     public void restore(SudokuTile t){
 	change(tiles[t.getRow()][t.getColumn()], t.getValue());
-    }
-    
-    public SudokuTile getTile(JTextField field){
-	return map.get(field);
     }
 
     public SudokuTile getTile(int row, int column){
@@ -92,11 +84,7 @@ public class SudokuGrid {
 	}
 	t.setValue(newVal);
 	if(newVal!=0){
-	    t.setTextField(String.valueOf(newVal));
 	    nums[newVal-1].add(t);
-	}
-	else{
-	    t.setTextField("");
 	}
     }
         

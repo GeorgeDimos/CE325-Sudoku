@@ -18,26 +18,19 @@ public class SudokuTile {
     private final int row;
     private final int column;
     private int solution;
-    private final JTextField textField;
     
-    public SudokuTile(boolean canEdit, int value, int gridNumber, int row, int column, JTextField textField){
+    public SudokuTile(boolean canEdit, int value, int gridNumber, int row, int column){
 	this.canEdit = canEdit;
 	this.value = value;
 	this.gridNumber = gridNumber;
 	this.row = row;
 	this.column = column;
-	this.textField = textField;
-	textField.setText(value!=0 ? String.valueOf(value) : "");
     }
     
     public SudokuTile backup(){
-	return new SudokuTile(canEdit, value, gridNumber, row, column, textField);
+	return new SudokuTile(canEdit, value, gridNumber, row, column);
     }
-    
-    public void setTextField(String text){
-	textField.setText(text);
-    }
-    
+   
     public void setValue(int value){
 	if(canEdit){
 	    this.value = value;
@@ -46,10 +39,6 @@ public class SudokuTile {
     
     public void setSolution(int solution){
 	this.solution = solution;
-    }
-    
-    public JTextField getTextField(){
-	return textField;
     }
     
     public int getSolution(){

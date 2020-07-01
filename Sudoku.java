@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Scanner;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -50,17 +52,22 @@ public class Sudoku{
     private static Deque<SudokuTile> backup;
     private static boolean verify;
     private static JTextField[][] fields;
+    private static Map<JTextField, SudokuTile> mapText2Tile;
+    private static Map<SudokuTile, JTextField> mapTile2Text;
 
     public static void main(String[] args) {
-	runGUI();
+	new Sudoku();
     }
 
-    private static void runGUI(){
+    private Sudoku(){
+	
 	JFrame frame = new JFrame("Sudoku");
 	frame.setLayout(new BorderLayout());
 	frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
 	frame.setVisible(true);
 	fields = new JTextField[9][9];
+	mapText2Tile = new LinkedHashMap<>();
+	mapTile2Text = new LinkedHashMap<>();
 	buildMenu(frame);
 
 	buildNumbersPanel(frame);
@@ -70,7 +77,7 @@ public class Sudoku{
 	frame.pack();
     }
     
-    private static void buildMenu(JFrame frame){
+    private void buildMenu(JFrame frame){
 
 	JMenuBar menu = new JMenuBar();
 	menu.setVisible(true);
@@ -80,43 +87,32 @@ public class Sudoku{
 	menu.add(menuGame);
 
 	JMenuItem menuEasy = new JMenuItem("Easy");
-	menuEasy.addActionListener(new ActionListener(){
-	    @Override
-	    public void actionPerformed(ActionEvent e) {
-		createGame(new File("sudoku_easy.txt"));
-	    }
-	    
+	menuEasy.addActionListener((ActionEvent e) -> {
+	    createGame(new File("sudoku_easy.txt"));
 	});
 	JMenuItem menuInter = new JMenuItem("Itermediate");
-	menuInter.addActionListener(new ActionListener(){
-	    @Override
-	    public void actionPerformed(ActionEvent e) {
-		createGame(new File("sudoku_medium.txt"));
-	    }
-	    
+	menuInter.addActionListener((ActionEvent e) -> {
+	    createGame(new File("sudoku_medium.txt"));
 	});
 	JMenuItem menuExp = new JMenuItem("Expert");
-	menuExp.addActionListener(new ActionListener(){
-	    @Override
-	    public void actionPerformed(ActionEvent e) {
-		createGame(new File("sudoku_hard.txt"));
-	    }
-	    
+	menuExp.addActionListener((ActionEvent e) -> {
+	    createGame(new File("sudoku_hard.txt"));
 	});
 	menuGame.add(menuEasy);menuGame.add(menuInter);menuGame.add(menuExp);
 
     }
     
-    private static void resetGame(){
+    private void resetGame(){
 	backup = new ArrayDeque<>();
     }
     
-    private static void resetUI(){
+    private void resetUI(){
 	verify = false;
 	verifyButton.setSelected(false);
 
 	for(int i=0; i<9; i++){
 	    for(int j=0; j<9; j++){
+		fields[i][j].setText(mapText2Tile.get(fields[i][j]).getValue()==0 ? "" : String.valueOf(mapText2Tile.get(fields[i][j]).getValue()));
 		fields[i][j].addFocusListener(focus);
 		fields[i][j].setFocusable(true);
 	    }
@@ -126,10 +122,10 @@ public class Sudoku{
 	verifyButton.setEnabled(true);
     }
     
-    private static void disableUI(){
+    private void disableUI(){
 	for(int i=0; i<9; i++){
 	    for(int j=0; j<9; j++){
-		board.getTile(i, j).getTextField().setFocusable(false);
+		fields[i][j].setFocusable(false);
 	    }
 	}
 	for(int i=0; i<12; i++){
@@ -138,7 +134,7 @@ public class Sudoku{
 	verifyButton.setEnabled(false);
     }
     
-    private static void createGame(File file){
+    private void createGame(File file){
 	
 	resetGame();
 	
@@ -158,14 +154,21 @@ public class Sudoku{
 	}
 	in.close();
 	
-	board = new SudokuGrid(arr, fields);
-
+	board = new SudokuGrid(arr);
+	
+	for(int i=0; i<9; i++){
+	    for (int j=0; j<9; j++){
+		mapText2Tile.put(fields[i/3*3+j/3][(i%3)*3+j%3], board.getTile(i, j));
+		mapTile2Text.put(board.getTile(i, j), fields[i/3*3+j/3][(i%3)*3+j%3]);
+	    }
+	}
+	
 	resetUI();
 	resetBackgroundColors();
     }
 
 
-    private static void buildNumbersPanel(JFrame frame){
+    private void buildNumbersPanel(JFrame frame){
 	
 	JPanel mainPanel = new JPanel(new GridLayout(3,3));
 	frame.add(mainPanel, CENTER);
@@ -182,7 +185,7 @@ public class Sudoku{
 	}
     }
 
-    private static void buildOptionsPanel(JFrame frame){
+    private void buildOptionsPanel(JFrame frame){
 
 	JPanel lowerPanel =  new JPanel(new FlowLayout());
 	options = new JButton[12];
@@ -221,6 +224,12 @@ public class Sudoku{
 	options[11].setEnabled(false);
 	options[11].addActionListener((ActionEvent e) -> {
 	    board.solve();
+	    for(int i=0;i<9; i++){
+		for(int j=0; j<9; j++){
+		    fields[i][j].setText(String.valueOf(mapText2Tile.get(fields[i][j]).getValue()));
+		}
+	    }
+	    selected = null;
 	    resetBackgroundColors();
 	    disableUI();
 	});
@@ -228,41 +237,41 @@ public class Sudoku{
 	frame.add(lowerPanel, PAGE_END);
     }
 
-    private static void resetBackgroundColors(){
+    private void resetBackgroundColors(){
 	for(int i=0;i<9; i++){
 	    for(int j=0; j<9; j++){
-		if(board.getTile(i,j).getTextField()==selected){continue;}
-		if(board.getTile(i,j).canEdit()){
-		    if(verify && board.getTile(i,j).isWrong()){
-			board.getTile(i,j).getTextField().setBackground(Color.blue);
+		if(fields[i][j]==selected){continue;}
+		if(mapText2Tile.get(fields[i][j]).canEdit()){
+		    if(verify && mapText2Tile.get(fields[i][j]).isWrong()){
+			fields[i][j].setBackground(Color.blue);
 		    }
 		    else{
-			board.getTile(i,j).getTextField().setBackground(Color.white);
+			fields[i][j].setBackground(Color.white);
 		    }
 		}
 		else{
-		    board.getTile(i,j).getTextField().setBackground(Color.gray);
+		    fields[i][j].setBackground(Color.gray);
 		}
 	    }
 	}
     }
 
-    private static void updateBackgroundColors(){
+    private void updateBackgroundColors(){
 	resetBackgroundColors();
-	if(selected==null || board.getTile(selected).getValue()==0){
+	if(selected==null || mapText2Tile.get(selected).getValue()==0){
 	    return;
 	}
-	board.getSameValue(board.getTile(selected).getValue()).forEach((t) -> {
-	    t.getTextField().setBackground(new Color(255,255,0));
+	board.getSameValue(mapText2Tile.get(selected).getValue()).forEach((SudokuTile t) -> {
+	    mapTile2Text.get(t).setBackground(new Color(255,255,0));
 	});
-    }
+	}
 
-    private static final FocusListener focus = new FocusListener() {
+    private final FocusListener focus = new FocusListener() {
 	@Override
 	public void focusGained(FocusEvent fe) {
 	    selected = (JTextField)fe.getComponent();
 	    selected.setBackground(new Color(255,255,0));
-	    if(board.getTile(selected).canEdit()&& board.getTile(selected).getValue()!=0){
+	    if(mapText2Tile.get(selected).canEdit()&& mapText2Tile.get(selected).getValue()!=0){
 		options[9].setEnabled(true);
 	    }
 	    else{
@@ -277,54 +286,58 @@ public class Sudoku{
 	}
     };
 
-    private static final ActionListener numClicked = new ActionListener(){
+    private final ActionListener numClicked = new ActionListener(){
 	@Override
 	public void actionPerformed(ActionEvent ae) {
 	    if(selected==null){
 		return;
 	    }
-	    if(!board.getTile(selected).canEdit()){
-		board.getTile(selected).getTextField().setBackground(Color.red);
+	    if(!mapText2Tile.get(selected).canEdit()){
+		selected.setBackground(Color.red);
 		return;
 	    }
-	    if(board.canChange(board.getTile(selected), Integer.valueOf(ae.getActionCommand()))){
+	    if(board.canChange(mapText2Tile.get(selected), Integer.valueOf(ae.getActionCommand()))){
 		if(backup.isEmpty()){
 		    options[10].setEnabled(true);
 		}
-		backup.push(board.getTile(selected).backup());
-		board.change(board.getTile(selected), Integer.valueOf(ae.getActionCommand()));
+		backup.push(mapText2Tile.get(selected).backup());
+		board.change(mapText2Tile.get(selected), Integer.valueOf(ae.getActionCommand()));
+		selected.setText(ae.getActionCommand());
 		options[9].setEnabled(true);
 		updateBackgroundColors();
 	    }
 	    else{
 		updateBackgroundColors();
-		ArrayList<SudokuTile> conf = board.getConflicts(board.getTile(selected), Integer.valueOf(ae.getActionCommand()));
-		conf.stream().filter((t) -> (t.getTextField()!=selected)).forEachOrdered((t) -> {
-		    t.getTextField().setBackground(Color.red);
+		ArrayList<SudokuTile> conf = board.getConflicts(mapText2Tile.get(selected), Integer.valueOf(ae.getActionCommand()));
+		conf.stream().filter((t) -> (mapTile2Text.get(t)!=selected)).forEachOrdered((t) -> {
+		    mapTile2Text.get(t).setBackground(Color.red);
 		});
 	    }
 	}
     };
 
-    private static final ActionListener erase = new ActionListener(){
+    private final ActionListener erase = new ActionListener(){
 	@Override
 	public void actionPerformed(ActionEvent ae) {
 	    if(selected==null){
 		return;
 	    }
-	    if(board.getTile(selected).canEdit() && board.getTile(selected).getValue()!=0){
-		backup.push(board.getTile(selected).backup());
-		board.change(board.getTile(selected),0);
+	    if(mapText2Tile.get(selected).canEdit() && mapText2Tile.get(selected).getValue()!=0){
+		backup.push(mapText2Tile.get(selected).backup());
+		board.change(mapText2Tile.get(selected),0);
+		selected.setText("");
 		options[9].setEnabled(false);
 	    }
 	}
     };
 
-    private static final ActionListener revert = new ActionListener(){
+    private final ActionListener revert = new ActionListener(){
 	@Override
 	public void actionPerformed(ActionEvent ae) {
 	    selected = null;
-	    board.restore(backup.pop());
+	    SudokuTile t = backup.pop();
+	    board.restore(t);
+	    mapTile2Text.get(board.getTile(t.getRow(),t.getColumn())).setText(t.getValue()!=0 ? String.valueOf(t.getValue()): "");
 	    if(backup.isEmpty()){
 		options[10].setEnabled(false);
 	    }
