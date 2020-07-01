@@ -214,7 +214,7 @@ public class Sudoku{
 	verifyButton.setRolloverEnabled(false);
 	verifyButton.addItemListener((ItemEvent e) -> {
 	    verify = verifyButton.getSelectedObjects() != null;
-	    resetBackgroundColors();
+	    updateBackgroundColors();
 	});
 	
 
@@ -264,13 +264,13 @@ public class Sudoku{
 	board.getSameValue(mapText2Tile.get(selected).getValue()).forEach((SudokuTile t) -> {
 	    mapTile2Text.get(t).setBackground(new Color(255,255,0));
 	});
+	if(verify && mapText2Tile.get(selected).isWrong()){selected.setBackground(Color.blue);}
 	}
 
     private final FocusListener focus = new FocusListener() {
 	@Override
 	public void focusGained(FocusEvent fe) {
 	    selected = (JTextField)fe.getComponent();
-	    selected.setBackground(new Color(255,255,0));
 	    if(mapText2Tile.get(selected).canEdit()&& mapText2Tile.get(selected).getValue()!=0){
 		options[9].setEnabled(true);
 	    }
@@ -278,6 +278,7 @@ public class Sudoku{
 		options[9].setEnabled(false);
 	    }
 	    updateBackgroundColors();
+	    selected.setBackground(new Color(255,255,0));
 	}
 
 	@Override
