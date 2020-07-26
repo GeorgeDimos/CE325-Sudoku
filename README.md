@@ -1,4 +1,6 @@
 # Sudoku
+![sudoku sample image](https://i.imgur.com/LJsOAcw.jpg)
+
 Μία εφαρμογή σε περιβάλλον Swing που υλοποιεί ένα παιχνίδι Sudoku. H εφαρμογή περιέχει ένα οριζόντιο μενού bar, με το μενού New Game με επιλογές
 - Easy
 - Intermediate
