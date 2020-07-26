@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package sudoku;
 
 import java.awt.BorderLayout;
@@ -52,8 +47,8 @@ public class Sudoku{
     private static Deque<UITile> backup;
     private static boolean verify;
     private static JTextField[][] fields;
-    private static Map<JTextField, SudokuTile> mapText2Tile;
-    private static Map<SudokuTile, JTextField> mapTile2Text;
+    private static Map<JTextField, SudokuTile> mapTextfieldToTile;
+    private static Map<SudokuTile, JTextField> mapTileToTextfield;
 
     public static void main(String[] args) {
 		Sudoku sudoku = new Sudoku();
@@ -68,8 +63,8 @@ public class Sudoku{
 		
 		fields = new JTextField[9][9];
 		
-		mapText2Tile = new LinkedHashMap<>();
-		mapTile2Text = new LinkedHashMap<>();
+		mapTextfieldToTile = new LinkedHashMap<>();
+		mapTileToTextfield = new LinkedHashMap<>();
 		
 		buildMenu(frame);
 
@@ -118,7 +113,7 @@ public class Sudoku{
 
 		for(int i=0; i<9; i++){
 			for(int j=0; j<9; j++){
-				int tileValue = mapText2Tile.get(fields[i][j]).getValue();
+				int tileValue = mapTextfieldToTile.get(fields[i][j]).getValue();
 				fields[i][j].setText(tileValue==0 ? "" : String.valueOf(tileValue));
 				fields[i][j].addFocusListener(focus);
 				fields[i][j].setFocusable(true);
@@ -168,8 +163,8 @@ public class Sudoku{
 
 		for(int i=0; i<9; i++){
 			for (int j=0; j<9; j++){
-				mapText2Tile.put(fields[i/3*3+j/3][(i%3)*3+j%3], board.getTile(i, j));
-				mapTile2Text.put(board.getTile(i, j), fields[i/3*3+j/3][(i%3)*3+j%3]);
+				mapTextfieldToTile.put(fields[i/3*3+j/3][(i%3)*3+j%3], board.getTile(i, j));
+				mapTileToTextfield.put(board.getTile(i, j), fields[i/3*3+j/3][(i%3)*3+j%3]);
 			}
 		}
 
@@ -236,7 +231,7 @@ public class Sudoku{
 			board.solve();
 			for(int i=0;i<9; i++){
 				for(int j=0; j<9; j++){
-					fields[i][j].setText(String.valueOf(mapText2Tile.get(fields[i][j]).getValue()));
+					fields[i][j].setText(String.valueOf(mapTextfieldToTile.get(fields[i][j]).getValue()));
 				}
 			}
 			selectedField = null;
@@ -254,7 +249,7 @@ public class Sudoku{
 	    for(int j=0; j<9; j++){
 			if(fields[i][j]==selectedField){continue;}
 			
-			SudokuTile currentTile = mapText2Tile.get(fields[i][j]);
+			SudokuTile currentTile = mapTextfieldToTile.get(fields[i][j]);
 			if(currentTile.canEdit()){
 				if(verify && currentTile.isWrong()){
 					fields[i][j].setBackground(Color.blue);
@@ -273,13 +268,13 @@ public class Sudoku{
     private void updateBackgroundColors(){
 		resetBackgroundColors();
 		
-		SudokuTile selectedTile = mapText2Tile.get(selectedField);
+		SudokuTile selectedTile = mapTextfieldToTile.get(selectedField);
 		if(selectedField==null || selectedTile.getValue()==0){
 			return;
 		}
 		
 		board.getSameValue(selectedTile.getValue()).forEach((SudokuTile t) -> {
-			mapTile2Text.get(t).setBackground(new Color(255,255,0));
+			mapTileToTextfield.get(t).setBackground(new Color(255,255,0));
 		});
 		
 		if(verify && selectedTile.isWrong()){
@@ -293,8 +288,8 @@ public class Sudoku{
 			
 			selectedField = (JTextField)fe.getComponent();
 			
-			SudokuTile selecteSudokuTile = mapText2Tile.get(selectedField);
-			if(selecteSudokuTile.canEdit() && selecteSudokuTile.getValue()!=0){
+			SudokuTile selectedTile = mapTextfieldToTile.get(selectedField);
+			if(selectedTile.canEdit() && selectedTile.getValue()!=0){
 				options[9].setEnabled(true);
 			}
 			else{
@@ -317,7 +312,7 @@ public class Sudoku{
 				return;
 			}
 
-			SudokuTile selectedTile = mapText2Tile.get(selectedField);
+			SudokuTile selectedTile = mapTextfieldToTile.get(selectedField);
 			
 			if(selectedTile.canEdit()==false){
 				selectedField.setBackground(Color.red);
@@ -354,8 +349,8 @@ public class Sudoku{
 			else{
 				updateBackgroundColors();
 				ArrayList<SudokuTile> conflicts = board.getConflicts(selectedTile, newValue);
-				conflicts.stream().filter((t) -> (mapTile2Text.get(t)!=selectedField)).forEachOrdered((t) -> {
-					mapTile2Text.get(t).setBackground(Color.red);
+				conflicts.stream().filter((t) -> (mapTileToTextfield.get(t)!=selectedField)).forEachOrdered((t) -> {
+					mapTileToTextfield.get(t).setBackground(Color.red);
 				});
 			}
 		}
@@ -368,7 +363,7 @@ public class Sudoku{
 				return;
 			}
 			
-			SudokuTile selectedTile = mapText2Tile.get(selectedField);
+			SudokuTile selectedTile = mapTextfieldToTile.get(selectedField);
 			if(selectedTile.canEdit() && selectedTile.getValue()!=0){
 				backup.push(new UITile(selectedTile));
 				board.change(selectedTile, 0);
@@ -387,7 +382,7 @@ public class Sudoku{
 			
 			SudokuTile tileToRevert = board.getTile(oldTile.getRow(), oldTile.getColumn());
 			int newValue = oldTile.getValue();
-			JTextField fieldToRevert = mapTile2Text.get(tileToRevert);
+			JTextField fieldToRevert = mapTileToTextfield.get(tileToRevert);
 			
 			board.change(tileToRevert, newValue);
 			fieldToRevert.setText(newValue==0 ? "":String.valueOf(newValue));
@@ -404,27 +399,21 @@ public class Sudoku{
 	private class UITile{
 		private final int value, row, column;
 		
-		public UITile(int value, int row, int column){
-			this.value = value;
-			this.row = row;
-			this.column = column;
-		}
-		
-		public UITile(SudokuTile t){
+		protected UITile(SudokuTile t){
 			this.value = t.getValue();
 			this.row = t.getRow();
 			this.column = t.getColumn();
 		}
 		
-		public int getRow(){
+		protected int getRow(){
 			return row;
 		}
 		
-		public int getColumn(){
+		protected int getColumn(){
 			return column;
 		}
 		
-		public int getValue(){
+		protected int getValue(){
 			return value;
 		}
 	}
