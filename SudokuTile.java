@@ -5,8 +5,6 @@
  */
 package sudoku;
 
-import javax.swing.JTextField;
-
 /**
  *
  * @author George
@@ -20,56 +18,53 @@ public class SudokuTile {
     private int solution;
     
     public SudokuTile(boolean canEdit, int value, int gridNumber, int row, int column){
-	this.canEdit = canEdit;
-	this.value = value;
-	this.gridNumber = gridNumber;
-	this.row = row;
-	this.column = column;
-    }
-    
-    public SudokuTile backup(){
-	return new SudokuTile(canEdit, value, gridNumber, row, column);
+		this.canEdit = canEdit;
+		this.value = value;
+		this.gridNumber = gridNumber;
+		this.row = row;
+		this.column = column;
     }
    
     public void setValue(int value){
-	if(canEdit){
-	    this.value = value;
-	}
+		if(canEdit){
+			this.value = value;
+		}
     }
     
     public void setSolution(int solution){
-	this.solution = solution;
+		this.solution = solution;
     }
     
     public int getSolution(){
-	return solution;
+		return solution;
     }
     
     public int getGrid(){
-	return gridNumber;
+		return gridNumber;
     }
     
     public int getRow(){
-	return row;
+		return row;
     }
     
     public int getColumn(){
-	return column;
+		return column;
     }
     
     public int getValue(){
-	return value;
+		return value;
     }
     
     public boolean canEdit(){
-	return canEdit;
+		return canEdit;
     }
     
     public boolean isWrong(){
-	return value!=solution && value!=0;
+		return value!=solution && value!=0;
     }
+	
     @Override
     public String toString(){
-	return gridNumber+","+row+"," + column+": "+value+", " ;
+		return gridNumber+","+row+"," + column+": "+value+", " ;
     }
 }
