@@ -51,7 +51,7 @@ public class Sudoku{
     private static Map<SudokuTile, JTextField> mapTileToTextfield;
 
     public static void main(String[] args) {
-	Sudoku sudoku = new Sudoku();
+	new Sudoku();
     }
 
     private Sudoku(){
